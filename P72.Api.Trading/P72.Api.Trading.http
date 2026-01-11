@@ -1,0 +1,6 @@
+@P72.Api.Trading_HostAddress = http://localhost:5088
+
+GET {{P72.Api.Trading_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

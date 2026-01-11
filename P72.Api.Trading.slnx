@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="P72.Api.Common/P72.Api.Common.csproj" />
+  <Project Path="P72.Api.Orchestrator/P72.Api.Orchestrator.csproj" />
+  <Project Path="P72.Api.Trading.DataAccess/P72.Api.Trading.DataAccess.csproj" />
+  <Project Path="P72.Api.Trading.Models/P72.Api.Trading.Models.csproj" />
+  <Project Path="P72.Api.Trading/P72.Api.Trading.csproj" />
+</Solution>
