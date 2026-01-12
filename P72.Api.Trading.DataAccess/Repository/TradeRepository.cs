@@ -1,15 +1,17 @@
-﻿using P72.Api.Common;
+﻿using Microsoft.IdentityModel.Tokens;
+using P72.Api.Common;
+using P72.Api.Common.Configuration;
 using P72.Api.Trading.Models;
 using P72.Api.Trading.Models.Request;
 using P72.Api.Trading.Models.Response;
-using P72.Api.Common.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.Data;
-using System.Data.SqlClient;
-using System.Globalization;
-using System.Reflection.Metadata;
 using P72.Api.Trading.Models.Trade;
 using System.Collections.Immutable;
+using System.Data;
+using System.Data.SqlClient;
+using System.Diagnostics.Metrics;
+using System.Globalization;
+using System.Reflection.Metadata;
+using Instrument = P72.Api.Trading.Models.Trade.Instrument;
 
 namespace P72.Api.Trading.DataAccess.Repository
 {
@@ -140,7 +142,29 @@ namespace P72.Api.Trading.DataAccess.Repository
         {
             List<GetTradeResponseModel> trades = GetTradeData().Where(p => p.AccountID == model.AccountID).ToList();
 
-            return trades;
+            var instruments = GetInstrumentData();
+            var userAccounts = GetUserAccountData();
+            var tradesFinal = from trade in trades join
+                                          inst in instruments on trade.InstrumentID equals inst.InstrumentID
+                                          join user in userAccounts on trade.AccountID equals user.AccountID
+                                          select new GetTradeResponseModel
+                                          {
+                                              TradeID = trade.TradeID,
+                                              TradeType = trade.TradeType,
+                                              AccountID = trade.AccountID,
+                                              AccountNumber = user.AccountNumber,
+                                              InstrumentID = trade.InstrumentID,
+                                              Symbol = inst.Symbol,
+                                              CompanyName = inst.CompanyName,
+                                              InstrumentType = inst.InstrumentType,
+                                              Exchange = inst.Exchange,
+                                              Currency = user.Currency,
+                                              Quantity = trade.Quantity,
+                                              Price = trade.Price,
+                                              Commission = trade.Commission,
+                                              TradeDate = trade.TradeDate
+                                          };
+            return tradesFinal.ToList();
            
         }
 
@@ -151,13 +175,34 @@ namespace P72.Api.Trading.DataAccess.Repository
                                      into tradeInstrumentGroup
                                      select new GetPositionResponseModel {
                                          InstrumentID = tradeInstrumentGroup.Key,
-                                         Quantity = tradeInstrumentGroup.Sum(p => p.Quantity),
-                                         AverageCostBasis = tradeInstrumentGroup.Sum(s=> s.Price * s.Quantity)/ tradeInstrumentGroup.Sum(p => p.Quantity),
+                                         Quantity = tradeInstrumentGroup.Where(x => x.TradeType == "Buy").Sum(p => p.Quantity) - tradeInstrumentGroup.Where(x => x.TradeType == "Sell").Sum(p => p.Quantity),
+                                         AverageCostBasis = tradeInstrumentGroup.Where(x => x.TradeType == "Buy").Sum(s=> s.Price * s.Quantity)/ tradeInstrumentGroup.Where(x => x.TradeType == "Buy").Sum(p => p.Quantity),
                                          AccountID = model.AccountID,
                                          PositionID = 1
                                      };
+            var instruments = GetInstrumentData();
+            var userAccounts = GetUserAccountData();
+            var tradesByInstrumentFinal = from trade in tradesByInstrument
+                                          join
+                                          inst in instruments on trade.InstrumentID equals inst.InstrumentID
+                                          join user in userAccounts on trade.AccountID equals user.AccountID
+                                          select new GetPositionResponseModel
+                                          {
+                                              PositionID = trade.PositionID,
+                                              AccountID = trade.AccountID,
+                                              AccountNumber = user.AccountNumber,
+                                              InstrumentID = trade.InstrumentID,
+                                              Symbol = inst.Symbol,
+                                              CompanyName = inst.CompanyName,
+                                              InstrumentType = inst.InstrumentType,
+                                              Exchange = inst.Exchange,
+                                              Currency = user.Currency,
+                                              Quantity = trade.Quantity,
+                                              AverageCostBasis= trade.AverageCostBasis,
+                                              LastUpdated = System.DateTime.Now
+                                          };
 
-            return tradesByInstrument.ToList();
+            return tradesByInstrumentFinal.ToList();
 
         }
 
@@ -180,6 +225,79 @@ namespace P72.Api.Trading.DataAccess.Repository
             return Convert.ToBoolean(dataReader[columnName]) ? "Yes" : "No";
         }
 
+        private List<UserAccount> GetUserAccountData()
+        {
+            List<UserAccount> userAccountList = new List<UserAccount>()
+            {
+                new UserAccount()
+                    {
+                        AccountID = 1,
+                        UserID  = 1001,
+                        AccountNumber = "lokesh123",
+                        Currency = "INR"
+                    },
+                new UserAccount()
+                    {
+                        AccountID = 2,
+                        UserID  = 1002,
+                        AccountNumber = "rakesh321",
+                        Currency = "INR"
+                    },
+            };
+
+            return userAccountList;
+        }
+
+        private List<Instrument> GetInstrumentData()
+        {
+            List<Instrument> instrumentList = new List<Instrument>()
+            {
+                new Instrument()
+                    {
+                        InstrumentID = 1,
+                        Symbol = "INFY",
+                        CompanyName = "Infosys Limited",
+                        Exchange = "NSE",
+                        InstrumentType = "EQ"
+                    },
+                new Instrument()
+                    {
+                        InstrumentID = 2,
+                        Symbol = "TCS",
+                        CompanyName = "Tata Consultancy Services",
+                        Exchange = "NSE",
+                        InstrumentType = "EQ"
+                    },
+                new Instrument()
+                    {
+                        InstrumentID = 3,
+                        Symbol = "ASHOKLEY",
+                        CompanyName = "Ashok Leyland",
+                        Exchange = "NSE",
+                        InstrumentType = "EQ"
+                    },
+                new Instrument()
+                    {
+                        InstrumentID = 4,
+                        Symbol = "ITC",
+                        CompanyName = "India Tobacco Corporation",
+                        Exchange = "NSE",
+                        InstrumentType = "EQ"
+                    },
+                new Instrument()
+                    {
+                        InstrumentID = 5,
+                        Symbol = "IRFC",
+                        CompanyName = "Indian Railway Finance Corp.",
+                        Exchange = "BSE",
+                        InstrumentType = "EQ"
+                    }
+            };
+
+            return instrumentList;
+
+        }
+
         private List<GetTradeResponseModel> GetTradeData()
         {
             List<GetTradeResponseModel> tradeList = new List<GetTradeResponseModel>()
@@ -190,9 +308,9 @@ namespace P72.Api.Trading.DataAccess.Repository
                     InstrumentID = 1,
                     TradeType = "Buy",
                     Quantity = 100,
-                    Price = 10,
+                    Price = 100,
                     TradeDate = DateTime.Now,
-                    Commission = 1
+                    Commission = 20
 
                 },
 
@@ -203,9 +321,9 @@ namespace P72.Api.Trading.DataAccess.Repository
                     InstrumentID = 2,
                     TradeType = "Buy",
                     Quantity = 100,
-                    Price = 20,
+                    Price = 200,
                     TradeDate = DateTime.Now,
-                    Commission = 1
+                    Commission = 20
 
                 },
                 new GetTradeResponseModel() {
@@ -214,9 +332,9 @@ namespace P72.Api.Trading.DataAccess.Repository
                     InstrumentID = 3,
                     TradeType = "Buy",
                     Quantity = 100,
-                    Price = 20,
+                    Price = 200,
                     TradeDate = DateTime.Now,
-                    Commission = 1
+                    Commission = 20
 
                 },
                 new GetTradeResponseModel() {
@@ -225,9 +343,9 @@ namespace P72.Api.Trading.DataAccess.Repository
                     InstrumentID = 4,
                     TradeType = "Buy",
                     Quantity = 100,
-                    Price = 20,
+                    Price = 100,
                     TradeDate = DateTime.Now,
-                    Commission = 1
+                    Commission = 20
 
                 },
                 new GetTradeResponseModel() {
@@ -236,9 +354,9 @@ namespace P72.Api.Trading.DataAccess.Repository
                     InstrumentID = 1,
                     TradeType = "Buy",
                     Quantity = 100,
-                    Price = 15,
+                    Price = 120,
                     TradeDate = DateTime.Now,
-                    Commission = 1                    
+                    Commission = 20                   
                 },
 
                 new GetTradeResponseModel() {
@@ -247,9 +365,33 @@ namespace P72.Api.Trading.DataAccess.Repository
                     InstrumentID = 2,
                     TradeType = "Buy",
                     Quantity = 100,
-                    Price = 18,
+                    Price = 180,
                     TradeDate = DateTime.Now,
-                    Commission = 1
+                    Commission = 20
+
+                },
+
+                new GetTradeResponseModel() {
+                    TradeID = 7,
+                    AccountID = 1,
+                    InstrumentID = 1,
+                    TradeType = "Sell",
+                    Quantity = 50,
+                    Price = 150,
+                    TradeDate = DateTime.Now,
+                    Commission = 20
+
+                },
+
+                new GetTradeResponseModel() {
+                    TradeID = 8,
+                    AccountID = 1,
+                    InstrumentID = 2,
+                    TradeType = "Sell",
+                    Quantity = 50,
+                    Price = 220,
+                    TradeDate = DateTime.Now,
+                    Commission = 20
 
                 }
 
