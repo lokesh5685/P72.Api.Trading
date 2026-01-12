@@ -182,13 +182,14 @@ namespace P72.Api.Trading.DataAccess.Repository
                                      };
             var instruments = GetInstrumentData();
             var userAccounts = GetUserAccountData();
+            int i = 1;
             var tradesByInstrumentFinal = from trade in tradesByInstrument
                                           join
                                           inst in instruments on trade.InstrumentID equals inst.InstrumentID
                                           join user in userAccounts on trade.AccountID equals user.AccountID
                                           select new GetPositionResponseModel
                                           {
-                                              PositionID = trade.PositionID,
+                                              PositionID = i++,
                                               AccountID = trade.AccountID,
                                               AccountNumber = user.AccountNumber,
                                               InstrumentID = trade.InstrumentID,
@@ -390,6 +391,28 @@ namespace P72.Api.Trading.DataAccess.Repository
                     TradeType = "Sell",
                     Quantity = 50,
                     Price = 220,
+                    TradeDate = DateTime.Now,
+                    Commission = 20
+
+                },
+                new GetTradeResponseModel() {
+                    TradeID = 9,
+                    AccountID = 1,
+                    InstrumentID = 3,
+                    TradeType = "Buy",
+                    Quantity = 200,
+                    Price = 220,
+                    TradeDate = DateTime.Now,
+                    Commission = 20
+
+                },
+                new GetTradeResponseModel() {
+                    TradeID = 10,
+                    AccountID = 1,
+                    InstrumentID = 3,
+                    TradeType = "Sell",
+                    Quantity = 100,
+                    Price = 200,
                     TradeDate = DateTime.Now,
                     Commission = 20
 
