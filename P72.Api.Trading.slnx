@@ -7,4 +7,5 @@
   <Project Path="P72.Api.Trading.DataAccess/P72.Api.Trading.DataAccess.csproj" />
   <Project Path="P72.Api.Trading.Models/P72.Api.Trading.Models.csproj" />
   <Project Path="P72.Api.Trading/P72.Api.Trading.csproj" />
+  <Project Path="P72.Caching/P72.Caching.csproj" Id="f519b566-d99f-4ddc-9aef-19085c82d9c1" />
 </Solution>

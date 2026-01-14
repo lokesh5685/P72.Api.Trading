@@ -1,6 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using P72.Api.Common;
-using P72.Api.Common.Configuration;
+﻿using P72.Api.Common.Configuration;
 using P72.Api.Trading.Models;
 using P72.Api.Trading.Models.Request;
 using P72.Api.Trading.Models.Response;
@@ -8,9 +6,6 @@ using P72.Api.Trading.Models.Trade;
 using System.Collections.Immutable;
 using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics.Metrics;
-using System.Globalization;
-using System.Reflection.Metadata;
 using Instrument = P72.Api.Trading.Models.Trade.Instrument;
 
 namespace P72.Api.Trading.DataAccess.Repository

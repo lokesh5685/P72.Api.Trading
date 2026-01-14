@@ -21,7 +21,7 @@ public static void Main(string[] args)
            }).ConfigureLogging(builder =>
            {
                builder.SetMinimumLevel(LogLevel.Trace);
-               //builder.AddLog4Net("log4net.config");
+               builder.AddLog4Net("log4net.config");
                builder.AddElasticLogger();
            });
 }

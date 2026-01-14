@@ -3,15 +3,8 @@ using P72.Api.Trading.DataAccess.Repository;
 using P72.Api.Trading.Models.Request;
 using P72.Api.Trading.Models.Response;
 using P72.Api.Common.Configuration;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Reflection.Metadata;
-using System.Text.RegularExpressions;
 using Constant = P72.Api.Common.Constant;
 
 namespace P72.Api.Trading.Orchestrator

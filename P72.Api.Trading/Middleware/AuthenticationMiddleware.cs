@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using P72.Caching;
 
 namespace P72.Api.Trading.Middleware
 {
@@ -12,11 +13,13 @@ namespace P72.Api.Trading.Middleware
     {
         private readonly RequestDelegate? _next;
         private readonly IConfigManager? _configuration;
+        private readonly ICacheProvider? _cacheProvider;
         private const string TiaaCacheKey = "TiaaMetadata";
-        public AuthenticationMiddleware(RequestDelegate? next, IConfigManager? configuration)
+        public AuthenticationMiddleware(RequestDelegate? next, IConfigManager? configuration, ICacheProvider? cacheProvider)
         {
             _next = next;
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _cacheProvider = cacheProvider ?? throw new ArgumentNullException(nameof(cacheProvider));
         }
         public async Task Invoke(HttpContext context)
         {
@@ -55,7 +58,7 @@ namespace P72.Api.Trading.Middleware
         private JsonWebKey? GetSecretKey(string keyId)
         {
             var metadataUrl = _configuration?.GetConfigurationSection("TiaaMetadataUrl").Value;
-            var tiaaKeys = new Metadata();
+            var tiaaKeys = _cacheProvider?.GetCache<Metadata>(TiaaCacheKey);
 
             if (tiaaKeys == null)
             {
@@ -66,6 +69,7 @@ namespace P72.Api.Trading.Middleware
                         var response = client.GetAsync(metadataUrl);
                         var tiaaKeysResponse = response.Result.Content.ReadAsStringAsync().Result;
                         tiaaKeys = JsonConvert.DeserializeObject<Metadata>(tiaaKeysResponse);
+                        _cacheProvider?.SetCache(TiaaCacheKey, tiaaKeys, 600);
                     }
                 }
                 catch (Exception ex)

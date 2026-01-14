@@ -7,9 +7,13 @@ using P72.Api.Trading.Extensions;
 //using P72.Api.Trading.Filters;
 using P72.Api.Trading.Middleware;
 using P72.Api.Trading.Orchestrator;
+using P72.API.Trading.Filters;
+using P72.Caching;
+
 //using Microsoft.OpenApi.Models;
 using System.Diagnostics.CodeAnalysis;
 using static P72.API.Trading.Filters.TradeRequestValidatorAttribute;
+using AuthenticationMiddleware = P72.Api.Trading.Middleware.AuthenticationMiddleware;
 
 namespace P72.API.Trading
 {
@@ -51,8 +55,9 @@ namespace P72.API.Trading
 
             // Add services to the container.
             services.AddMemoryCache();
-            //services.AddSingleton<TradeValidatorFilter>();
-           
+            services.AddSingleton<TradeRequestValidatorAttribute>();
+            services.AddSingleton<TradeValidatorFilter>();
+            services.AddTransient<ICacheProvider, CacheProvider>();
             services.AddTransient<IConfigManager, ConfigManager>();
             services.AddTransient<ITradeDetails, TradeDetails>();
             services.AddTransient<ITradeRepository, TradeRepository>();
@@ -67,7 +72,7 @@ namespace P72.API.Trading
         [ExcludeFromCodeCoverage]
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            //app.UseMiddleware<AuthenticationMiddleware>();
+            app.UseMiddleware<AuthenticationMiddleware>();
             app.UseHttpsRedirection();
             app.UseRequestResponseLogging();
             app.UseCustomExceptionMiddleware();

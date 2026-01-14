@@ -7,8 +7,8 @@ using P72.Api.Common.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Net;
-using System.Reflection;
-using System.Reflection.Metadata;
+using P72.API.Trading.Filters;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace P72.Api.Trading.Controllers
 {
@@ -32,6 +32,7 @@ namespace P72.Api.Trading.Controllers
 
         [HttpGet]
         [Route("GetTradeDetailsFromDB")]
+        [SwaggerIgnore]
         public IActionResult GetTradeDetailsFromDB([FromQuery] GetTradeRequestModel model)
         {
             try
@@ -57,6 +58,7 @@ namespace P72.Api.Trading.Controllers
 
         [HttpGet]
         [Route("GetTradeDetails")]
+        [ServiceFilter(typeof(TradeRequestValidatorAttribute))]
         public IActionResult GetTradeDetails([FromQuery] GetTradeRequestModel model)
         {
             try
